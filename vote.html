@@ -43,6 +43,11 @@ body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif;
 .error-msg { font-size:11px; color:var(--red); margin-top:3px; display:none; }
 .error-msg.show { display:block; }
 .bgg-hint { font-size:11px; color:var(--text3); margin-top:4px; }
+.loc-select { width:100%; padding:9px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:'Outfit',sans-serif; font-weight:300; color:var(--text); outline:none; transition:border-color 0.2s; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%235a5448' d='M5 7L1 3h8z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:30px; }
+.loc-select:focus { border-color:var(--gold); }
+.loc-select.filled { border-color:rgba(212,168,67,0.4); }
+.loc-select.error { border-color:var(--red); }
+.loc-select option { background:var(--bg2); }
 .bgg-hint a { color:var(--gold); text-decoration:none; }
 
 .section { border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1rem; background:var(--bg2); position:relative; transition:border-color 0.2s; }
@@ -124,6 +129,7 @@ body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif;
 .plays-empty { padding:12px; font-size:12px; color:var(--text3); text-align:center; }
 .plays-error { padding:12px; font-size:12px; color:var(--red); text-align:center; }
 </style>
+  <script src="location-data.js"></script>
   <script src="config.js"></script>
 </head>
 <body>
@@ -171,17 +177,16 @@ body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif;
       <div class="fields-row">
         <div class="field">
           <label><span class="required-dot"></span><span id="city-label">Ciudad</span></label>
-          <input type="text" id="city-input" placeholder="..." autocomplete="off" list="cities-list">
-          <datalist id="cities-list">
-            <option value="Puebla">
-            <option value="Toluca">
-            <option value="Ciudad de México">
-            <option value="Guadalajara">
-            <option value="Monterrey">
-            <option value="Querétaro">
-            <option value="Playa del Carmen">
-            <option value="Mérida">  
-          </datalist>
+          <select class="loc-select filled" id="country-select" onchange="onCountryChange()">
+            <option value="México">🇲🇽 México</option>
+            <option value="United States">🇺🇸 United States</option>
+            <option value="Spain">🇪🇸 España</option>
+            <option value="__other__">Other</option>
+          </select>
+          <select class="loc-select" id="metro-select" onchange="onMetroChange()" style="margin-top:6px; display:none">
+            <option value="">Área / City</option>
+          </select>
+          <input type="text" id="city-input" placeholder="Tu ciudad" autocomplete="off" style="margin-top:6px; display:none">
           <div class="error-msg" id="city-error">Indica tu ciudad para continuar</div>
         </div>
         <div class="field">
@@ -287,8 +292,8 @@ const T = {
     main_title:["Tu voto","del mes"],
     nokey_title:"Enlace inválido", nokey_desc:"Este enlace no es válido. Pide el enlace de votación a un administrador.", nokey_link:"Ver rankings →",
     closed_title:"Votación cerrada", closed_desc:"La ventana de votación ha expirado. Los resultados se publicarán pronto.", closed_link:"Ver rankings →",
-    about_title:"Sobre ti", city_label:"Ciudad", bgg_label:"Usuario BGG", bgg_opt:"opcional",
-    city_ph:"Madrid, Buenos Aires...", bgg_ph:"tu_usuario", city_error:"Indica tu ciudad para continuar",
+    about_title:"Sobre ti", city_label:"Ubicación", bgg_label:"Usuario BGG", bgg_opt:"opcional",
+    city_ph:"...", bgg_ph:"tu_usuario", city_error:"Indica tu ciudad para continuar",
     hot_title:"Novedades del mes", hot_desc:"Juegos que jugaste este mes. Ordénalos de mayor a menor emoción.",
     fav_title:"Favoritos eternos", fav_desc:"Juegos que siempre quieres volver a jugar, de cualquier época.",
     shame_title:"Nunca más", shame_desc:"Un juego que no quieres volver a ver en la mesa. Solo uno.",
@@ -302,8 +307,8 @@ const T = {
     main_title:["Your vote","this month"],
     nokey_title:"Invalid link", nokey_desc:"This link is not valid. Ask an admin for this month's voting link.", nokey_link:"View rankings →",
     closed_title:"Voting closed", closed_desc:"The voting window has expired. Results will be published soon.", closed_link:"View rankings →",
-    about_title:"About you", city_label:"City", bgg_label:"BGG username", bgg_opt:"optional",
-    city_ph:"Madrid, Buenos Aires...", bgg_ph:"your_username", city_error:"Please enter your city to continue",
+    about_title:"About you", city_label:"Location", bgg_label:"BGG username", bgg_opt:"optional",
+    city_ph:"...", bgg_ph:"your_username", city_error:"Please enter your city to continue",
     hot_title:"This month's hotness", hot_desc:"Games you played this month. Rank them by excitement.",
     fav_title:"Eternal favorites", fav_desc:"Games you always want to play again, from any era.",
     shame_title:"Never again", shame_desc:"One game you never want to see on the table again.",
@@ -356,6 +361,78 @@ function updateProgress(){
   document.getElementById('submit-btn').disabled=!(cityOk&&hasHot&&hasFav&&sel.shame1);
 }
 
+// ── Location cascading selects ──────────────────────────────
+function onCountryChange(){
+  const country = document.getElementById('country-select').value;
+  const metroSel = document.getElementById('metro-select');
+  const cityInput = document.getElementById('city-input');
+
+  metroSel.innerHTML = '<option value="">Área / City</option>';
+  metroSel.classList.remove('filled','error');
+  cityInput.value = '';
+  cityInput.classList.remove('filled','error');
+  document.getElementById('city-error').classList.remove('show');
+
+  if(!country){
+    metroSel.style.display = 'none';
+    cityInput.style.display = 'none';
+    return;
+  }
+
+  if(country === '__other__'){
+    metroSel.style.display = 'none';
+    cityInput.style.display = '';
+    cityInput.focus();
+    updateProgress();
+    return;
+  }
+
+  const areas = Object.keys(LOCATION_DATA[country] || {});
+  areas.forEach(area => {
+    const opt = document.createElement('option');
+    opt.value = area; opt.textContent = area;
+    metroSel.appendChild(opt);
+  });
+  metroSel.style.display = '';
+  cityInput.style.display = 'none';
+  updateProgress();
+}
+
+function onMetroChange(){
+  const metro = document.getElementById('metro-select').value;
+  const cityInput = document.getElementById('city-input');
+
+  // If "Otra ciudad" selected, show free text input
+  if(metro === 'Otra ciudad de México'){
+    cityInput.value = '';
+    cityInput.style.display = '';
+    cityInput.focus();
+    cityInput.classList.remove('filled');
+    document.getElementById('metro-select').classList.add('filled');
+    updateProgress();
+    return;
+  }
+
+  cityInput.style.display = 'none';
+
+  if(metro){
+    cityInput.value = metro;
+    cityInput.classList.add('filled');
+    cityInput.classList.remove('error');
+    document.getElementById('city-error').classList.remove('show');
+    document.getElementById('metro-select').classList.add('filled');
+  } else {
+    cityInput.value = '';
+    cityInput.classList.remove('filled');
+    document.getElementById('metro-select').classList.remove('filled');
+  }
+  updateProgress();
+}
+
+// Pre-populate México metros on load
+window.addEventListener('DOMContentLoaded', () => { onCountryChange(); });
+
+// ── City input listener (for Otro / Other) ───────────────────
 document.getElementById('city-input').addEventListener('input',function(){
   this.classList.toggle('filled',this.value.trim().length>0);
   this.classList.remove('error');
