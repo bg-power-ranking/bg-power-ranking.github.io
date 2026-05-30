@@ -2,3 +2,4 @@ config.dev.js
 config.prod.js
 config.dev.js
 .DS_Store
+.Rhistory
