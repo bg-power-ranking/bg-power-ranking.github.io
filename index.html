@@ -115,7 +115,7 @@ nav { display:flex; align-items:center; justify-content:space-between; padding:1
 <nav>
   <div class="nav-logo">Tabletop <em>Power Rankings</em></div>
   <div class="nav-right">
-    <a href="vote-june-2026.html" class="nav-link" id="nav-vote">Votar</a>
+    <a href="vote.html" class="nav-link" id="nav-vote">Votar</a>
     <div class="lang">
       <button class="active" onclick="setLang('es')">ES</button>
       <button onclick="setLang('en')">EN</button>
@@ -362,6 +362,16 @@ async function init(){
   updateStaticTexts();
   loadGamesCache();
   document.getElementById('panel0').innerHTML=`<div class="loading">${tr('loading')}</div>`;
+
+  // Update vote link if there's an active key
+  try{
+    const s = await fetch(API_URL+'?action=status').then(r=>r.json());
+    const keys = s.activeKeys||[];
+    if(keys.length){
+      const month = keys[keys.length-1].month;
+      document.getElementById('nav-vote').href = 'vote.html?m='+month;
+    }
+  }catch(e){}
   try{
     const res=await fetch(API_URL+'?action=published');
     const data=await res.json();
