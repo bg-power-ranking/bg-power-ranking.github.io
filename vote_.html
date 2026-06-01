@@ -186,10 +186,6 @@ body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif;
           <select class="loc-select" id="metro-select" onchange="onMetroChange()" style="margin-top:6px; display:none">
             <option value="">Área / City</option>
           </select>
-          <input type="text" class="loc-select" id="other-country-input" placeholder="Tu país / Your country" autocomplete="off" oninput="onOtherCountryType()" style="margin-top:6px; display:none">
-          <select class="loc-select" id="city-select" onchange="onCitySelect()" style="margin-top:6px; display:none">
-            <option value="">Ciudad / City</option>
-          </select>
           <input type="text" id="city-input" placeholder="Tu ciudad" autocomplete="off" style="margin-top:6px; display:none">
           <div class="error-msg" id="city-error">Indica tu ciudad para continuar</div>
         </div>
@@ -373,10 +369,6 @@ function onCountryChange(){
 
   metroSel.innerHTML = '<option value="">Área / City</option>';
   metroSel.classList.remove('filled','error');
-  const oci = document.getElementById('other-country-input');
-  if(oci){ oci.value=''; oci.style.display='none'; oci.classList.remove('filled'); }
-  const cs = document.getElementById('city-select');
-  if(cs){ cs.innerHTML='<option value="">Ciudad / City</option>'; cs.style.display='none'; cs.classList.remove('filled'); }
   cityInput.value = '';
   cityInput.classList.remove('filled','error');
   document.getElementById('city-error').classList.remove('show');
@@ -389,15 +381,11 @@ function onCountryChange(){
 
   if(country === '__other__'){
     metroSel.style.display = 'none';
-    cityInput.style.display = 'none';
-    cityInput.value = '';
-    const oci = document.getElementById('other-country-input');
-    if(oci){ oci.style.display=''; oci.focus(); }
+    cityInput.style.display = '';
+    cityInput.focus();
     updateProgress();
     return;
   }
-  const oci2 = document.getElementById('other-country-input');
-  if(oci2){ oci2.style.display='none'; oci2.value=''; }
 
   const areas = Object.keys(LOCATION_DATA[country] || {});
   areas.forEach(area => {
@@ -411,18 +399,11 @@ function onCountryChange(){
 }
 
 function onMetroChange(){
-  const metro      = document.getElementById('metro-select').value;
-  const cityInput  = document.getElementById('city-input');
-  const citySelect = document.getElementById('city-select');
-  const country    = document.getElementById('country-select').value;
+  const metro = document.getElementById('metro-select').value;
+  const cityInput = document.getElementById('city-input');
 
-  // Reset city select
-  citySelect.innerHTML = '<option value="">Ciudad / City</option>';
-  citySelect.style.display = 'none';
-  citySelect.classList.remove('filled');
-
-  // If "Otra ciudad" or "Other" selected, show free text input
-  if(metro === 'Otra ciudad de México' || metro === 'Other'){
+  // If "Otra ciudad" selected, show free text input
+  if(metro === 'Otra ciudad de México'){
     cityInput.value = '';
     cityInput.style.display = '';
     cityInput.focus();
@@ -435,30 +416,11 @@ function onMetroChange(){
   cityInput.style.display = 'none';
 
   if(metro){
+    cityInput.value = metro;
+    cityInput.classList.add('filled');
+    cityInput.classList.remove('error');
+    document.getElementById('city-error').classList.remove('show');
     document.getElementById('metro-select').classList.add('filled');
-
-    // Check if this state/region has cities in LOCATION_DATA
-    const cities = (LOCATION_DATA[country] || {})[metro] || [];
-    if(cities.length > 0){
-      // Populate city dropdown
-      cities.forEach(city => {
-        const opt = document.createElement('option');
-        opt.value = city; opt.textContent = city;
-        citySelect.appendChild(opt);
-      });
-      // Add "Other" option at the bottom
-      const other = document.createElement('option');
-      other.value = 'Other'; other.textContent = 'Otra / Other';
-      citySelect.appendChild(other);
-      citySelect.style.display = '';
-      cityInput.value = '';
-    } else {
-      // No cities — use metro/state as city value directly (México behavior)
-      cityInput.value = metro;
-      cityInput.classList.add('filled');
-      cityInput.classList.remove('error');
-      document.getElementById('city-error').classList.remove('show');
-    }
   } else {
     cityInput.value = '';
     cityInput.classList.remove('filled');
@@ -467,50 +429,8 @@ function onMetroChange(){
   updateProgress();
 }
 
-function onCitySelect(){
-  const city      = document.getElementById('city-select').value;
-  const cityInput = document.getElementById('city-input');
-
-  if(city === 'Other'){
-    cityInput.value = '';
-    cityInput.style.display = '';
-    cityInput.focus();
-    cityInput.classList.remove('filled');
-    document.getElementById('city-select').classList.add('filled');
-    updateProgress();
-    return;
-  }
-
-  cityInput.style.display = 'none';
-  if(city){
-    cityInput.value = city;
-    cityInput.classList.add('filled');
-    cityInput.classList.remove('error');
-    document.getElementById('city-error').classList.remove('show');
-    document.getElementById('city-select').classList.add('filled');
-  } else {
-    cityInput.value = '';
-    cityInput.classList.remove('filled');
-    document.getElementById('city-select').classList.remove('filled');
-  }
-  updateProgress();
-}
-
 // Pre-populate México metros on load
 window.addEventListener('DOMContentLoaded', () => { onCountryChange(); });
-
-function onOtherCountryType(){
-  const val = document.getElementById('other-country-input').value.trim();
-  const cityInput = document.getElementById('city-input');
-  document.getElementById('other-country-input').classList.toggle('filled', val.length > 0);
-  if(val){
-    cityInput.style.display = '';
-  } else {
-    cityInput.style.display = 'none';
-    cityInput.value = '';
-  }
-  updateProgress();
-}
 
 // ── City input listener (for Otro / Other) ───────────────────
 document.getElementById('city-input').addEventListener('input',function(){

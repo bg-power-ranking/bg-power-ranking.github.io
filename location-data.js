@@ -70,9 +70,9 @@ const LOCATION_DATA = {
     "Ocotlán": ["Ocotlán","Jamay","Poncitlán"],
     "Tehuantepec": ["Salina Cruz","Tehuantepec"],
     "Hidalgo del Parral": ["Hidalgo del Parral"],
-    "Otra ciudad de México": []
+    "Other": []
   },
-  "Estados Unidos": {
+  "United States": {
     "Alabama": ["Birmingham","Montgomery","Huntsville","Mobile","Tuscaloosa"],
     "Alaska": ["Anchorage","Fairbanks","Juneau"],
     "Arizona": ["Phoenix","Tucson","Mesa","Chandler","Scottsdale","Tempe","Gilbert","Glendale"],
@@ -120,7 +120,8 @@ const LOCATION_DATA = {
     "Washington DC": ["Washington DC"],
     "West Virginia": ["Charleston","Huntington","Morgantown"],
     "Wisconsin": ["Milwaukee","Madison","Green Bay","Kenosha"],
-    "Wyoming": ["Cheyenne","Casper"]
+    "Wyoming": ["Cheyenne","Casper"],
+    "Other": []
   },
   "España": {
     "Andalucía": ["Sevilla","Málaga","Granada","Córdoba","Almería","Jaén","Cádiz","Huelva","Marbella","Jerez de la Frontera"],
@@ -141,7 +142,8 @@ const LOCATION_DATA = {
     "Navarra": ["Pamplona","Tudela"],
     "País Vasco": ["Bilbao","San Sebastián","Vitoria","Barakaldo"],
     "Ceuta": ["Ceuta"],
-    "Melilla": ["Melilla"]
+    "Melilla": ["Melilla"],
+    "Other": []
   },
   "Otro / Other": {}
 };
